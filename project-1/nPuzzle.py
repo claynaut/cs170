@@ -1,5 +1,5 @@
-from anytree import Node, RenderTree
-import copy
+from anytree import Node # nodes used to create a tree
+import copy # deep copy used to make a copy of a value to avoid alterating a reference
 
 # collection of start states given by project specs from the instructor
 depth_0 = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
@@ -10,8 +10,13 @@ depth_12 = [[1, 3, 6], [5, 0, 7], [4, 8, 2]]
 depth_16 = [[1, 6, 7], [5, 0, 3], [4, 8, 2]]
 defaults = [depth_0, depth_2, depth_4, depth_8, depth_12, depth_16]
 
-# defined goal state
+# default goal state for a 3x3 puzzle that gets altered if a custom start state is created
 goal_state = [[1, 2, 3], [4, 5 , 6], [7, 8, 0]]
+
+# prints puzzle in console
+def printPuzzle(puzzle):
+    for row in puzzle: 
+        print(row)
 
 # creates an 8-puzzle based on the user's option and returns the generated 8-puzzle
 def selectPuzzle():
@@ -56,6 +61,14 @@ def selectPuzzle():
         # array used to validate user input (checked to make sure user doesn't input duplicate numbers)
         # each element is set to -1 to indicate the number is already taken
         available_numbers = list(range(n*n))
+
+        # clear goal state to create a new goal state based on the custom puzzle layout
+        goal_state = []
+        for i in range(n):
+            # appends an array from a range starting at 1 (which is why a 1 is added)
+            # and uses i and n to calculate the start and of the ranges
+            goal_state.append(list(range(i*n+1, (i+1)*n+1)))
+        goal_state[n-1][n-1] = 0 # sets the bottom right corner to a 0 to indicate a blank space
 
         # generate empty puzzle to fill in by user input
         puzzle = []
@@ -128,124 +141,141 @@ def runAlgorithm(option, problem):
         print('\nSolving with A* Manhattan Distance heuristic...')
         return search(problem, 2)
 
-# general search function
-def search(problem, heuristic):
-    root = Node(problem[0]) # set start state as the root node
-    goal = Node(problem[1]) # define goal state as a node
-    nodes = [root] # put root into queue
-    nodesExpanded = 0
-    maxQueueSize = 1
-
-    while 1:
-        # if queue is empty, search failed
-        if not nodes:
-            print('Failure!')
-            return
-
-        # set current node to the node at the front of the queue
-        current_node = nodes.pop(0)
-
-        # if goal state is reached, return current node
-        if current_node.name == goal.name:
-            print('Goal state reached!')
-            print('\nSolution depth:', current_node.depth)
-            print('Nodes expanded:', nodesExpanded)
-            print('Max queue size:', maxQueueSize)
-            return
-
-        if not current_node.is_root:
-            print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
-            printPuzzle(current_node.name)
-            print()
-
-        # otherwise, expand tree based on the heuristic
-        children = expandNode(current_node)
-        for child in children:
-            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
-        sortedByHeuristic = sorted(current_node.children, key = lambda child: child.h)
-        nodes = nodes + sortedByHeuristic
-        nodesExpanded += 1
-        maxQueueSize = max(maxQueueSize, len(nodes))
-
-def calculateHeuristic(puzzle, heuristic):
-    h = 0
-    if heuristic == 1:
-        for row in range(len(puzzle)):
-            for col in range(len(puzzle)):
-                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
-                    h += 1
-    elif heuristic == 2:
-        misplaced = []
-        for row in range(len(puzzle)):
-            for col in range(len(puzzle)):
-                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
-                    misplaced.append(puzzle[row][col])
-        for tile in misplaced:
-            [goal_row, goal_col] = getTileLocation(goal_state, tile)
-            [curr_row, curr_col] = getTileLocation(puzzle, tile)
-            h += abs(goal_row - curr_row) + abs(goal_col - curr_col)
-
-    return h
-
+# gets location of provided tile within provided puzzle
 def getTileLocation(puzzle, number):
+    # checks each row if the number exist
     for row in range(len(puzzle)):
+        # if number exists in the row, returns location [row, column]
         if number in puzzle[row]:
             return [row, puzzle[row].index(number)]
 
-def moveLeft(puzzle):
-    [blank_row, blank_col] = getTileLocation(puzzle, 0)
+# calculates h(n) based on heuristic chosen
+def calculateHeuristic(puzzle, heuristic):
+    # if it's uniform cost search, h(n) remains 0
+    h = 0
 
+    # if it's misplaced tile heuristic
+    if heuristic == 1:
+        # checks each location by row and column
+        for row in range(len(puzzle)):
+            for col in range(len(puzzle)):
+                # compares provided puzzle against goal state and increments h(n)
+                # and checks that the blank state isn't counted
+                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
+                    h += 1
+
+    # if it's manhattan distance heuristic
+    elif heuristic == 2:
+        misplaced = [] # stores misplaced tiles
+        for row in range(len(puzzle)):
+            for col in range(len(puzzle)):
+                # compare provided puzzle against goal state and adds to an array of misplaced tiles
+                # and checks that the blank state isn't counted
+                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
+                    misplaced.append(puzzle[row][col])
+        # for each misplaced tile, calculates the distance from the goal state
+        for tile in misplaced:
+            [goal_row, goal_col] = getTileLocation(goal_state, tile) # gets location of tile in the goal state
+            [curr_row, curr_col] = getTileLocation(puzzle, tile) # gets location of tile in the current state
+            h += abs(goal_row - curr_row) + abs(goal_col - curr_col) # gets the difference between the two locations
+
+    # returns calculated h(n)
+    return h
+
+# operation to move blank space to the left
+def moveLeft(puzzle):
+    [blank_row, blank_col] = getTileLocation(puzzle, 0) # gets location of blank space
+
+    # checks if it's valid to perform a move left operation so that it doesn't go out of bounds
     if blank_col == 0:
         return -1
 
+    # creates a deep copy so original puzzle passed in isn't altered directly
     newPuzzle = copy.deepcopy(puzzle)
+
+    # swaps locations of necessary tiles to perform respective operation
     newPuzzle[blank_row][blank_col] = newPuzzle[blank_row][blank_col-1]
     newPuzzle[blank_row][blank_col-1] = 0
+
+    # returns the altered puzzle copy
     return newPuzzle
 
+# operation to move blank space to the right
 def moveRight(puzzle):
-    [blank_row, blank_col] = getTileLocation(puzzle, 0)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0) # gets location of blank space
 
+    # checks if it's valid to perform a move right operation so that it doesn't go out of bounds
     if blank_col == 2:
         return -1
 
+    # creates a deep copy so original puzzle passed in isn't altered directly
     newPuzzle = copy.deepcopy(puzzle)
+
+    # swaps locations of necessary tiles to perform respective operation
     newPuzzle[blank_row][blank_col] = newPuzzle[blank_row][blank_col+1]
     newPuzzle[blank_row][blank_col+1] = 0
+
+    # returns the altered puzzle copy
     return newPuzzle
 
+# operation to move blank space up
 def moveUp(puzzle):
-    [blank_row, blank_col] = getTileLocation(puzzle, 0)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0) # gets location of blank space
 
+    # checks if it's valid to perform a move up operation so that it doesn't go out of bounds
     if blank_row == 0:
         return -1
 
+    # creates a deep copy so original puzzle passed in isn't altered directly
     newPuzzle = copy.deepcopy(puzzle)
+
+    # swaps locations of necessary tiles to perform respective operation
     newPuzzle[blank_row][blank_col] = newPuzzle[blank_row-1][blank_col]
     newPuzzle[blank_row-1][blank_col] = 0
+
+    # returns the altered puzzle copy
     return newPuzzle
 
+# operation to move blank space to down
 def moveDown(puzzle):
-    [blank_row, blank_col] = getTileLocation(puzzle, 0)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0) # gets location of blank space
 
+    # checks if it's valid to perform a move down operation so that it doesn't go out of bounds
     if blank_row == 2:
         return -1
 
+    # creates a deep copy so original puzzle passed in isn't altered directly
     newPuzzle = copy.deepcopy(puzzle)
+
+    # swaps locations of necessary tiles to perform respective operation
     newPuzzle[blank_row][blank_col] = newPuzzle[blank_row+1][blank_col]
     newPuzzle[blank_row+1][blank_col] = 0
+
+    # returns the altered puzzle copy
     return newPuzzle
 
+# expands given node and returns the children
 def expandNode(node):
-    children = []
+    children = [] # stores children of given node
+
+    # copies puzzle in node and performs a move left operation
     move_left = copy.deepcopy(node.name)
     move_left = moveLeft(move_left)
+
+    # copies puzzle in node and performs a move right operation
     move_right = copy.deepcopy(node.name)
     move_right = moveRight(move_right)
+
+    # copies puzzle in node and performs a move up operation
     move_up = copy.deepcopy(node.name)
     move_up = moveUp(move_up)
+
+    # copies puzzle in node and performs a move down operation
     move_down = copy.deepcopy(node.name)
     move_down = moveDown(move_down)
+
+    # checks return value of each operation
+    # and if operation was valid, the result is added to array of children
     if move_left != -1:
         children.append(move_left)
     if move_right != -1:
@@ -254,12 +284,55 @@ def expandNode(node):
         children.append(move_up)
     if move_down != -1:
         children.append(move_down)
+
+    # returns an array of children to assign to the provided node
     return children
 
-# prints puzzle in console
-def printPuzzle(puzzle):
-    for row in puzzle: 
-        print(row)
+# general search function
+def search(problem, heuristic):
+    root = Node(problem[0]) # sets start state as the root node
+    goal = Node(problem[1]) # defines goal state as a node
+    nodes = [root] # places root into queue
+    nodesExpanded = 0 # keeps track of nodes expanded
+    maxQueueSize = 1 # keeps track of max queue size
+
+    while 1:
+        # if queue is empty, print failure
+        if not nodes:
+            print('Failure!')
+            return
+
+        # sets current node to the node at the front of the queue
+        current_node = nodes.pop(0)
+
+        # if goal state is reached, print statistics
+        if current_node.name == goal.name:
+            print('Goal state reached!')
+            print('\nSolution depth:', current_node.depth)
+            print('Nodes expanded:', nodesExpanded)
+            print('Max queue size:', maxQueueSize)
+            return
+
+        # prints best node to expand, stating g(n) and h(n)
+        print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
+        printPuzzle(current_node.name)
+        print() # for spacing print messages
+
+        # if goal state is not yet reached, expand tree based on the heuristic
+        children = expandNode(current_node)
+
+        # for each child from expanded node, calculates the heuristic and adds it to the tree
+        for child in children:
+            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
+
+        # sorts children by heuristic in ascending order so child with the smallest h(n) is queued first
+        sortedByHeuristic = sorted(current_node.children, key = lambda child: child.h)
+
+        # concatenate children to te queue
+        nodes = nodes + sortedByHeuristic
+
+        nodesExpanded += 1 # increments counter for nodes expanded
+        maxQueueSize = max(maxQueueSize, len(nodes)) # takes the maximum of the previous and current queue sizes
 
 # main function
 def main():
