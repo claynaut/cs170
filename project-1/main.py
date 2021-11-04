@@ -1,3 +1,6 @@
+from anytree import Node, RenderTree
+import copy
+
 # collection of start states given by project specs from the instructor
 depth_0 = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 depth_2 = [[1, 2, 3], [4, 5, 6], [0, 7, 8]]
@@ -20,12 +23,12 @@ def selectPuzzle():
     option  = int(input('\nChoose an option: '))
 
     # if user selects an invalid option, loop until a valid input is made
-    while (option != 1 and option != 2):
+    while option != 1 and option != 2:
         print('Error: Invalid option. Try again.')
         option  = int(input('Choose an option: '))
 
     # returns default puzzle layout
-    if (option == 1):
+    if option == 1:
         print('\nUsing default puzzle layouts...')
         print('\n\t1. Depth 0')
         print('\t2. Depth 2')
@@ -41,7 +44,7 @@ def selectPuzzle():
         return defaults[n-1]
 
     # creates a custom puzzle layout
-    elif (option == 2):
+    elif option == 2:
         print('\nCreating custom puzzle layout...')
     
         # asks user for the size of the puzzle
@@ -101,7 +104,7 @@ def selectAlgorithm():
     option  = int(input('\nChoose an option: '))
 
     # if user selects an invalid option, loop until a valid input is made
-    while (option != 1 and option != 2 and option != 3):
+    while option != 1 and option != 2 and option != 3:
         print('Error: Invalid option. Try again.')
         option  = int(input('Choose an option: '))
 
@@ -109,18 +112,152 @@ def selectAlgorithm():
     return option
 
 # prints out which algorithm will be used and calls the respective function for that algorithm
-def runAlgorithm(option):
+def runAlgorithm(option, problem):
     # runs algorithm for uniform cost search
-    if (option == 1):
+    if option == 1:
         print('\nSolving with Uniform Cost Search...')
+        return search(problem, 0)
 
     # runs algorithm for A* with misplaced tile heuristic
-    elif (option == 2):
-        print('\Solving with A* with Misplaced Tile heuristic...')
+    elif option == 2:
+        print('\nSolving with A* with Misplaced Tile heuristic...')
+        return search(problem, 1)
 
     # runs algorithm for A* with manhattan distance heuristic
-    elif (option == 3):
-        print('\Solving with A* Manhattan Distance heuristic...')
+    elif option == 3:
+        print('\nSolving with A* Manhattan Distance heuristic...')
+        return search(problem, 2)
+
+# general search function
+def search(problem, heuristic):
+    root = Node(problem[0]) # set start state as the root node
+    goal = Node(problem[1]) # define goal state as a node
+    nodes = [root] # put root into queue
+    nodesExpanded = 0
+    maxQueueSize = 1
+
+    while 1:
+        # print tree
+        # print(RenderTree(root).by_attr())
+
+        # if queue is empty, search failed
+        if not nodes:
+            print('Failure!')
+            return
+
+        # set current node to the node at the front of the queue
+        current_node = nodes.pop(0)
+
+        # if goal state is reached, return current node
+        if current_node.name == goal.name:
+            print('Goal state reached!')
+            print('\nSolution depth:', current_node.depth)
+            print('Nodes expanded:', nodesExpanded)
+            print('Max queue size:', maxQueueSize)
+            return
+
+        # otherwise, expand tree based on the heuristic
+        children = expandNode(current_node)
+        for child in children:
+            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
+        sortedByHeuristic = sorted(current_node.children, key = lambda child: child.h)
+        nodes = nodes + sortedByHeuristic
+        print('Best node to expand with g(n) =', nodes[0].depth, 'and h(n) =', nodes[0].h, 'is:')
+        printPuzzle(nodes[0].name)
+        print()
+        nodesExpanded += 1
+        maxQueueSize = max(maxQueueSize, len(nodes))
+
+def calculateHeuristic(puzzle, heuristic):
+    h = 0
+    if heuristic == 1:
+        for row in range(len(puzzle)):
+            for col in range(len(puzzle)):
+                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
+                    h += 1
+    elif heuristic == 2:
+        misplaced = []
+        for row in range(len(puzzle)):
+            for col in range(len(puzzle)):
+                if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
+                    misplaced.append(puzzle[row][col])
+        for tile in misplaced:
+            
+
+    return h
+
+def getBlankLocation(puzzle):
+    if 0 in puzzle[0]:
+        blank_location = [0, puzzle[0].index(0)]
+    elif 0 in puzzle[1]:
+        blank_location = [1, puzzle[1].index(0)]
+    elif 0 in puzzle[2]:
+        blank_location = [2, puzzle[2].index(0)]
+    return blank_location
+
+def moveLeft(puzzle):
+    [blank_row, blank_col] = getBlankLocation(puzzle)
+
+    if blank_col == 0:
+        return -1
+
+    newPuzzle = copy.deepcopy(puzzle)
+    newPuzzle[blank_row][blank_col] = newPuzzle[blank_row][blank_col-1]
+    newPuzzle[blank_row][blank_col-1] = 0
+    return newPuzzle
+
+def moveRight(puzzle):
+    [blank_row, blank_col] = getBlankLocation(puzzle)
+
+    if blank_col == 2:
+        return -1
+
+    newPuzzle = copy.deepcopy(puzzle)
+    newPuzzle[blank_row][blank_col] = newPuzzle[blank_row][blank_col+1]
+    newPuzzle[blank_row][blank_col+1] = 0
+    return newPuzzle
+
+def moveUp(puzzle):
+    [blank_row, blank_col] = getBlankLocation(puzzle)
+
+    if blank_row == 0:
+        return -1
+
+    newPuzzle = copy.deepcopy(puzzle)
+    newPuzzle[blank_row][blank_col] = newPuzzle[blank_row-1][blank_col]
+    newPuzzle[blank_row-1][blank_col] = 0
+    return newPuzzle
+
+def moveDown(puzzle):
+    [blank_row, blank_col] = getBlankLocation(puzzle)
+
+    if blank_row == 2:
+        return -1
+
+    newPuzzle = copy.deepcopy(puzzle)
+    newPuzzle[blank_row][blank_col] = newPuzzle[blank_row+1][blank_col]
+    newPuzzle[blank_row+1][blank_col] = 0
+    return newPuzzle
+
+def expandNode(node):
+    children = []
+    move_left = copy.deepcopy(node.name)
+    move_left = moveLeft(move_left)
+    move_right = copy.deepcopy(node.name)
+    move_right = moveRight(move_right)
+    move_up = copy.deepcopy(node.name)
+    move_up = moveUp(move_up)
+    move_down = copy.deepcopy(node.name)
+    move_down = moveDown(move_down)
+    if move_left != -1:
+        children.append(move_left)
+    if move_right != -1:
+        children.append(move_right)
+    if move_up != -1:
+        children.append(move_up)
+    if move_down != -1:
+        children.append(move_down)
+    return children
 
 # prints puzzle in console
 def printPuzzle(puzzle):
@@ -129,17 +266,45 @@ def printPuzzle(puzzle):
 
 # main function
 def main():
-    # asks user which puzzle to make and makes the desired puzzle
-    puzzle = selectPuzzle()
+    # asks user which puzzle to make and makes the desired puzzle the start state
+    start_state = selectPuzzle()
 
     # prints selected puzzle in console
-    printPuzzle(puzzle)
+    printPuzzle(start_state)
         
     # prints menu for selecting an algorithm
     algorithm = selectAlgorithm()
 
+    # makes the problem to solve in the algorithm
+    problem = [start_state, goal_state]
+
+    # prints the start state and goal state
+    print('\nStart state:')
+    printPuzzle(problem[0])
+    print('\nGoal state:')
+    printPuzzle(problem[1])
+
     # starts running selected algorithm
-    runAlgorithm(algorithm)
+    runAlgorithm(algorithm, problem)
 
 # runs main function
 main()
+# arr = [1,2,3]
+# test = Node(arr)
+# test2 = Node(arr, parent=test)
+# print(RenderTree(test))
+# for child in test.children:
+#     child.h = 0
+#     print(child.h)
+
+# root = Node(depth_4)
+# queue = [root]
+# children = expandNode(root)
+# for child in children:
+#     child = Node(child, parent=root, h=calculateHeuristic(child, 0))
+# print(root.children)
+# sortedChildren = sorted(root.children, key = lambda child: child.h)
+# print(sortedChildren[0])
+# print(queue[0])
+# queue = queue + sortedChildren
+# print(queue)
