@@ -1,5 +1,6 @@
 from anytree import Node # nodes used to create a tree
 import copy # deep copy used to make a copy of a value to avoid alterating a reference
+import time # used to record how long it took to run the search
 
 # collection of start states given by project specs from the instructor
 depth_0 = [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
@@ -313,10 +314,11 @@ def search(problem, heuristic):
             print('Max queue size:', maxQueueSize)
             return
 
-        # prints best node to expand, stating g(n) and h(n)
-        print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
-        printPuzzle(current_node.name)
-        print() # for spacing print messages
+        # prints best node to expand, stating g(n) and h(n), not including the root node
+        if not current_node.is_root:
+            print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
+            printPuzzle(current_node.name)
+            print() # for spacing print messages
 
         # if goal state is not yet reached, expand tree based on the heuristic
         children = expandNode(current_node)
@@ -336,26 +338,16 @@ def search(problem, heuristic):
 
 # main function
 def main():
-    # asks user which puzzle to make and makes the desired puzzle the start state
-    start_state = selectPuzzle()
-
-    # prints selected puzzle in console
-    printPuzzle(start_state)
+    start_state = selectPuzzle() # asks user which puzzle to make and makes the desired puzzle the start state
+    printPuzzle(start_state) # prints selected puzzle in console
         
-    # prints menu for selecting an algorithm
-    algorithm = selectAlgorithm()
+    algorithm = selectAlgorithm() # asks user which algorithm to use
+    problem = [start_state, goal_state] # makes the problem to solve in the algorithm
+    start = time.time() # start recording time
 
-    # makes the problem to solve in the algorithm
-    problem = [start_state, goal_state]
+    runAlgorithm(algorithm, problem) # runs selected algorithm with the created problem
 
-    # prints the start state and goal state
-    print('\nStart state:')
-    printPuzzle(problem[0])
-    print('\nGoal state:')
-    printPuzzle(problem[1])
+    end = time.time() # stops recording time
+    print('\nTime taken:', round(end - start, 2), 'seconds') # prints how much time it took to run the search
 
-    # starts running selected algorithm
-    runAlgorithm(algorithm, problem)
-
-# runs main function
-main()
+main() # runs main function
