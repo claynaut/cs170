@@ -26,12 +26,12 @@ def selectPuzzle():
     print('\t2. Create a custom puzzle layout')
 
     # retrieves user's selection for which puzzle to make
-    option  = int(input('\nChoose an option: '))
+    option = int(input('\nChoose an option: '))
 
     # if user selects an invalid option, loop until a valid input is made
     while option != 1 and option != 2:
         print('Error: Invalid option. Try again.')
-        option  = int(input('Choose an option: '))
+        option = int(input('Choose an option: '))
 
     # returns default puzzle layout
     if option == 1:
@@ -59,7 +59,7 @@ def selectPuzzle():
         # array used to validate user input (numbers determined by the size of the puzzle)
         possible_numbers = list(range(n*n))
 
-        # array used to validate user input (checked to make sure user doesn't input duplicate numbers)
+        # array used to validate user input (avoids inputting duplicate numbers)
         # each element is set to -1 to indicate the number is already taken
         available_numbers = list(range(n*n))
 
@@ -85,16 +85,14 @@ def selectPuzzle():
                 # retrieves user's input for a number in the row
                 element = int(input())
 
-                # check if the number selected is in the possible numbers to select from
-                # otherwise, loop until the user inputs a valid number
-                while (not (element in possible_numbers)):
-                    print('Error: Invalid input. Select numbers from 0-' + str(len(possible_numbers)-1) + '.')
-                    element = int(input())
-
-                # check if the number selected hasn't already been taken (to avoid duplicate numbers)
-                # otherwise, loop until the user inputs a valid number
-                while (not (element in available_numbers)):
-                    print('Error: Duplicate value. Number already added to puzzle.')
+                # input validation if inputted number is a valid choice and isn't a duplicate
+                # which prints respective error message and prompts user to try again
+                while (not (element in possible_numbers)) or (not (element in available_numbers)):
+                    if not (element in possible_numbers):
+                        print('Error: Invalid input.', end=' ')
+                        print('Select numbers from 0-' + str(len(possible_numbers)-1) + '.')
+                    else:
+                        print('Error: Duplicate value. Number already added to puzzle.')
                     element = int(input())
 
                 # set chosen number in the array of available numbers to -1
@@ -115,12 +113,12 @@ def selectAlgorithm():
     print('\t3. A* Manhattan Distance heuristic')
 
     # retrieves user's selection on which algorithm to use
-    option  = int(input('\nChoose an option: '))
+    option = int(input('\nChoose an option: '))
 
     # if user selects an invalid option, loop until a valid input is made
     while option != 1 and option != 2 and option != 3:
         print('Error: Invalid option. Try again.')
-        option  = int(input('Choose an option: '))
+        option = int(input('Choose an option: '))
 
     # returns user's selection
     return option
@@ -170,15 +168,18 @@ def calculateHeuristic(puzzle, heuristic):
         misplaced = [] # stores misplaced tiles
         for row in range(len(puzzle)):
             for col in range(len(puzzle)):
-                # compare provided puzzle against goal state and adds to an array of misplaced tiles
+                # compares provided puzzle against goal state to get misplaced tiles
                 # and checks that the blank state isn't counted
                 if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
                     misplaced.append(puzzle[row][col])
         # for each misplaced tile, calculates the distance from the goal state
         for tile in misplaced:
-            [goal_row, goal_col] = getTileLocation(goal_state, tile) # gets location of tile in the goal state
-            [curr_row, curr_col] = getTileLocation(puzzle, tile) # gets location of tile in the current state
-            h += abs(goal_row - curr_row) + abs(goal_col - curr_col) # gets the difference between the two locations
+            # gets location of tile in the goal state
+            [goal_row, goal_col] = getTileLocation(goal_state, tile)
+            # gets location of tile in the current state
+            [curr_row, curr_col] = getTileLocation(puzzle, tile)
+            # gets the difference between the two locations
+            h += abs(goal_row - curr_row) + abs(goal_col - curr_col)
 
     # returns calculated h(n)
     return h
@@ -323,7 +324,10 @@ def search(problem, heuristic):
         # prints best node to expand, stating g(n) and h(n)
         # and does not apply for the root node since it will always be the first to expand
         if not current_node.is_root:
-            print('Best node to expand with g(n) = ', current_node.depth, ', h(n) = ', current_node.h, ', f(n) = ', current_node.f, ':', sep='')
+            print('Best node to expand with', end=' ')
+            print('g(n) = ', current_node.depth, end='')
+            print(', h(n) = ', current_node.h, end='')
+            print(', f(n) = ', current_node.f, ':', sep='')
             printPuzzle(current_node.name)
             print() # for spacing print messages
 
@@ -332,19 +336,20 @@ def search(problem, heuristic):
 
         # for each child from expanded node
         for child in children:
-            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic)) # adds to the tree with an attribute for its h(n)
-            calculateCost(child)
+            # adds to the tree with an attribute for its h(n)
+            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
+            calculateCost(child) # calculates f(n) = g(n) + h(n) as the cost
             nodes.append(child) # adds to queue
 
         # sorts queue by heuristic in ascending order so node with the smallest f(n) is queued first
         nodes.sort(key = lambda node: node.f)
 
         nodesExpanded += 1 # increments counter for nodes expanded
-        maxQueueSize = max(maxQueueSize, len(nodes)) # takes the maximum of the previous and current queue sizes
+        maxQueueSize = max(maxQueueSize, len(nodes)) # takes max of the previous and current queue size
 
 # main function
 def main():
-    start_state = selectPuzzle() # asks user which puzzle to make and makes the desired puzzle the start state
+    start_state = selectPuzzle() # asks user which puzzle to make and makes it the start state
     printPuzzle(start_state) # prints selected puzzle in console
         
     algorithm = selectAlgorithm() # asks user which algorithm to use
@@ -354,6 +359,6 @@ def main():
     runAlgorithm(algorithm, problem) # runs selected algorithm with the created problem
 
     end = time.time() # stops recording time
-    print('\nTime taken:', round(end - start, 3), 'seconds') # prints how much time it took to run the search
+    print('\nTime taken:', round(end - start, 3), 'seconds') # prints time it took to run the search
 
 main() # runs main function
