@@ -137,9 +137,6 @@ def search(problem, heuristic):
     maxQueueSize = 1
 
     while 1:
-        # print tree
-        # print(RenderTree(root).by_attr())
-
         # if queue is empty, search failed
         if not nodes:
             print('Failure!')
@@ -156,15 +153,17 @@ def search(problem, heuristic):
             print('Max queue size:', maxQueueSize)
             return
 
+        if not current_node.is_root:
+            print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
+            printPuzzle(current_node.name)
+            print()
+
         # otherwise, expand tree based on the heuristic
         children = expandNode(current_node)
         for child in children:
             child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
         sortedByHeuristic = sorted(current_node.children, key = lambda child: child.h)
         nodes = nodes + sortedByHeuristic
-        print('Best node to expand with g(n) =', nodes[0].depth, 'and h(n) =', nodes[0].h, 'is:')
-        printPuzzle(nodes[0].name)
-        print()
         nodesExpanded += 1
         maxQueueSize = max(maxQueueSize, len(nodes))
 
@@ -182,21 +181,19 @@ def calculateHeuristic(puzzle, heuristic):
                 if puzzle[row][col] != goal_state[row][col] and puzzle[row][col] != 0:
                     misplaced.append(puzzle[row][col])
         for tile in misplaced:
-            
+            [goal_row, goal_col] = getTileLocation(goal_state, tile)
+            [curr_row, curr_col] = getTileLocation(puzzle, tile)
+            h += abs(goal_row - curr_row) + abs(goal_col - curr_col)
 
     return h
 
-def getBlankLocation(puzzle):
-    if 0 in puzzle[0]:
-        blank_location = [0, puzzle[0].index(0)]
-    elif 0 in puzzle[1]:
-        blank_location = [1, puzzle[1].index(0)]
-    elif 0 in puzzle[2]:
-        blank_location = [2, puzzle[2].index(0)]
-    return blank_location
+def getTileLocation(puzzle, number):
+    for row in range(len(puzzle)):
+        if number in puzzle[row]:
+            return [row, puzzle[row].index(number)]
 
 def moveLeft(puzzle):
-    [blank_row, blank_col] = getBlankLocation(puzzle)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0)
 
     if blank_col == 0:
         return -1
@@ -207,7 +204,7 @@ def moveLeft(puzzle):
     return newPuzzle
 
 def moveRight(puzzle):
-    [blank_row, blank_col] = getBlankLocation(puzzle)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0)
 
     if blank_col == 2:
         return -1
@@ -218,7 +215,7 @@ def moveRight(puzzle):
     return newPuzzle
 
 def moveUp(puzzle):
-    [blank_row, blank_col] = getBlankLocation(puzzle)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0)
 
     if blank_row == 0:
         return -1
@@ -229,7 +226,7 @@ def moveUp(puzzle):
     return newPuzzle
 
 def moveDown(puzzle):
-    [blank_row, blank_col] = getBlankLocation(puzzle)
+    [blank_row, blank_col] = getTileLocation(puzzle, 0)
 
     if blank_row == 2:
         return -1
@@ -289,22 +286,3 @@ def main():
 
 # runs main function
 main()
-# arr = [1,2,3]
-# test = Node(arr)
-# test2 = Node(arr, parent=test)
-# print(RenderTree(test))
-# for child in test.children:
-#     child.h = 0
-#     print(child.h)
-
-# root = Node(depth_4)
-# queue = [root]
-# children = expandNode(root)
-# for child in children:
-#     child = Node(child, parent=root, h=calculateHeuristic(child, 0))
-# print(root.children)
-# sortedChildren = sorted(root.children, key = lambda child: child.h)
-# print(sortedChildren[0])
-# print(queue[0])
-# queue = queue + sortedChildren
-# print(queue)
