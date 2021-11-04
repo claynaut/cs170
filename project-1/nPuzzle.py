@@ -330,10 +330,6 @@ def search(problem, heuristic):
         # if goal state is not yet reached, expand tree based on the heuristic
         children = expandNode(current_node)
 
-        if current_node.depth == 15:
-            print(RenderTree(root).by_attr('h'))
-            return
-
         # for each child from expanded node
         for child in children:
             child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic)) # adds to the tree with an attribute for its h(n)
