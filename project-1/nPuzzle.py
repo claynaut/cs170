@@ -183,6 +183,12 @@ def calculateHeuristic(puzzle, heuristic):
     # returns calculated h(n)
     return h
 
+# calculates f(n) based on the node's g(n) and h(n)
+def calculateCost(node):
+    # computes f(n) by adding g(n) which is the depth and h(n) which is the heuristic
+    # and sets it as the cost attribute for the node
+    node.f = node.depth + node.h
+
 # operation to move blank space to the left
 def moveLeft(puzzle):
     [blank_row, blank_col] = getTileLocation(puzzle, 0) # gets location of blank space
@@ -314,24 +320,28 @@ def search(problem, heuristic):
             print('Max queue size:', maxQueueSize)
             return
 
-        # prints best node to expand, stating g(n) and h(n), not including the root node
+        # prints best node to expand, stating g(n) and h(n)
+        # and does not apply for the root node since it will always be the first to expand
         if not current_node.is_root:
-            print('Best node to expand with g(n) =', current_node.depth, 'and h(n) =', current_node.h, 'is:')
+            print('Best node to expand with g(n) = ', current_node.depth, ', h(n) = ', current_node.h, ', f(n) = ', current_node.f, ':', sep='')
             printPuzzle(current_node.name)
             print() # for spacing print messages
 
         # if goal state is not yet reached, expand tree based on the heuristic
         children = expandNode(current_node)
 
-        # for each child from expanded node, calculates the heuristic and adds it to the tree
+        if current_node.depth == 15:
+            print(RenderTree(root).by_attr('h'))
+            return
+
+        # for each child from expanded node
         for child in children:
-            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic))
+            child = Node(child, parent=current_node, h=calculateHeuristic(child, heuristic)) # adds to the tree with an attribute for its h(n)
+            calculateCost(child)
+            nodes.append(child) # adds to queue
 
-        # sorts children by heuristic in ascending order so child with the smallest h(n) is queued first
-        sortedByHeuristic = sorted(current_node.children, key = lambda child: child.h)
-
-        # concatenate children to te queue
-        nodes = nodes + sortedByHeuristic
+        # sorts queue by heuristic in ascending order so node with the smallest f(n) is queued first
+        nodes.sort(key = lambda node: node.f)
 
         nodesExpanded += 1 # increments counter for nodes expanded
         maxQueueSize = max(maxQueueSize, len(nodes)) # takes the maximum of the previous and current queue sizes
@@ -348,6 +358,6 @@ def main():
     runAlgorithm(algorithm, problem) # runs selected algorithm with the created problem
 
     end = time.time() # stops recording time
-    print('\nTime taken:', round(end - start, 2), 'seconds') # prints how much time it took to run the search
+    print('\nTime taken:', round(end - start, 3), 'seconds') # prints how much time it took to run the search
 
 main() # runs main function
