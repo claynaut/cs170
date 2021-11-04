@@ -1,5 +1,5 @@
 from anytree import Node # nodes used to create a tree
-import copy # deep copy used to make a copy of a value to avoid alterating a reference
+import copy # deep copy used to make a copy of a value to avoid altering a reference
 import time # used to record how long it took to run the search
 
 # collection of start states given by project specs from the instructor
@@ -295,7 +295,7 @@ def expandNode(node):
     # returns an array of children to assign to the provided node
     return children
 
-# general search function
+# general search function using provided structure
 def search(problem, heuristic):
     root = Node(problem[0]) # sets start state as the root node
     goal = Node(problem[1]) # defines goal state as a node
