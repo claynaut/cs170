@@ -17,7 +17,7 @@ Three search algorithms in question:
 The main code used to solve the eight puzzle is `nPuzzle.py` which has also been modified to try to solve any custom puzzle where the user determines the start state and goal state.
 
 ### Sources Consulted
-- Heuristic Search and Eight Puzzle Briefing lecture slides provided by Dr. Keogh
+- Heuristic Search, Blind Search, and Eight Puzzle Briefing lecture slides provided by Dr. Keogh
 - Project 1 specificatons provided by Dr. Keogh
 - [Python 3.10.0 documentation](https://docs.python.org/)
 - [Any Python Three documentation](https://anytree.readthedocs.io/)
