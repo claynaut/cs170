@@ -28,7 +28,7 @@ def forwardSelection(data):
 
         # if accuracy has decreased, send warning and toggle flag to end next turn
         if max(accuracies.values()) < chosen[1]:
-            print('\nWARNING: Accuracy has decreased! Conintuing search in case of local maxima...')
+            print('\nWARNING: Accuracy has decreased! Continuing search in case of local maxima...')
             end_next_turn = 0
 
         chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
