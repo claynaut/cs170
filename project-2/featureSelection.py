@@ -8,6 +8,10 @@ def forwardSelection(data):
     chosen = [[], -1] # initialize chosen features, 1st index holds features, 2nd holds accuracy
     best = [[], -1] # initialize best features, 1st index holds features, 2nd holds accuracy
     end_next_turn = -1 # used to determine when to break the while loop
+
+    # calculate and print accuracy of all features
+    print('\nRunning KNN with all features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+
     print('\nBeginning search...\n')
     while len(features) > 0:
         accuracies = {} # use dictionary to link accuracies to specific features
