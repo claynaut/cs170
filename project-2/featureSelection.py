@@ -10,9 +10,11 @@ def backwardElimination(data):
     end_next_turn = -1 # used to determine when to break the while loop
 
     # calculate and print accuracy of all features
-    print('\nRunning KNN with ALL features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+    print('\nRunning KNN with ALL features, we get an accuracy of', end= ' ')
+    print(round(accuracy(knnSearch(data, features)), 1), '%', sep='')
     # calculate and print accuracy of no features
-    print('Running KNN with NO features, we get an accuracy of ', round(accuracy(knnSearch(data, [])), 1), '%', sep='')
+    print('Running KNN with NO features, we get an accuracy of', end= ' ')
+    print(round(accuracy(knnSearch(data, [])), 1), '%', sep='')
 
     print('\nBeginning search...\n')
     while len(features) > 0:
@@ -22,7 +24,8 @@ def backwardElimination(data):
             result = knnSearch(data, chosen[0]) # get knn classification
             accuracies[feature] = accuracy(result) # calculate and store accuracy
             # note that features printed are incremented by 1 due to nature of indices in an array
-            print('\tUsing feature(s) ', [i+1 for i in chosen[0]], ', accuracy is ', round(accuracies[feature], 1), '%', sep='')
+            print('\tUsing feature(s) ', [i+1 for i in chosen[0]], sep='', end= '')
+            print(', accuracy is ', round(accuracies[feature], 1), '%', sep='')
             chosen[0].append(feature) # add tested feature back
             chosen[0].sort() # sort features back in order
 
@@ -37,7 +40,8 @@ def backwardElimination(data):
         chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
         chosen[0].remove(chosen_feature) # eliminate from chosen features
         chosen[1] = max(accuracies.values()) # get max accuracy from current values
-        print('\nFeature(s) ', [i+1 for i in chosen[0]], ' was/were best with accuracy of ', round(max(accuracies.values()), 1), '%\n', sep='')
+        print('\nFeature(s) ', [i+1 for i in chosen[0]], sep='', end=' ')
+        print('was/were best with accuracy of ', round(max(accuracies.values()), 1), '%\n', sep='')
         
         # copy only the best set of features with highest/increasing accuracy
         if chosen[1] > best[1]:
@@ -45,7 +49,8 @@ def backwardElimination(data):
 
         features.remove(chosen_feature) # remove current feature for future searches
     
-    print('\nFinished search! Best feature(s) is/are ', [i+1 for i in best[0]], ' with accuracy of ', round(best[1], 1), '%', sep='')
+    print('\nFinished search! Best feature(s) is/are ', [i+1 for i in best[0]], sep='', end=' ')
+    print('with accuracy of ', round(best[1], 1), '%', sep='')
 
 # performs forward selection search
 def forwardSelection(data):
@@ -55,9 +60,11 @@ def forwardSelection(data):
     end_next_turn = -1 # used to determine when to break the while loop
 
     # calculate and print accuracy of all features
-    print('\nRunning KNN with ALL features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+    print('\nRunning KNN with ALL features, we get an accuracy of', end= ' ')
+    print(round(accuracy(knnSearch(data, features)), 1), '%', sep='')
     # calculate and print accuracy of no features
-    print('Running KNN with NO features, we get an accuracy of ', round(accuracy(knnSearch(data, [])), 1), '%', sep='')
+    print('Running KNN with NO features, we get an accuracy of', end= ' ')
+    print(round(accuracy(knnSearch(data, [])), 1), '%', sep='')
 
     print('\nBeginning search...\n')
     while len(features) > 0:
@@ -67,7 +74,8 @@ def forwardSelection(data):
             result = knnSearch(data, chosen[0]) # get knn classification
             accuracies[feature] = accuracy(result) # calculate and store accuracy
             # note that features printed are incremented by 1 due to nature of indices in an array
-            print('\tUsing feature(s) ', [i+1 for i in chosen[0]], ', accuracy is ', round(accuracies[feature], 1), '%', sep='')
+            print('\tUsing feature(s) ', [i+1 for i in chosen[0]], sep='', end= '')
+            print(', accuracy is ', round(accuracies[feature], 1), '%', sep='')
             chosen[0].pop() # remove tested feature
 
         if end_next_turn == 0:
@@ -81,7 +89,8 @@ def forwardSelection(data):
         chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
         chosen[0].append(chosen_feature) # add to chosen features
         chosen[1] = max(accuracies.values()) # get max accuracy from current values
-        print('\nFeature(s) ', [i+1 for i in chosen[0]], ' was/were best with accuracy of ', round(max(accuracies.values()), 1), '%\n', sep='')
+        print('\nFeature(s) ', [i+1 for i in chosen[0]], sep='', end=' ')
+        print('was/were best with accuracy of ', round(max(accuracies.values()), 1), '%\n', sep='')
         
         # copy only the best set of features with highest/increasing accuracy
         if chosen[1] > best[1]:
@@ -89,7 +98,8 @@ def forwardSelection(data):
 
         features.remove(chosen_feature) # remove current feature for future searches
     
-    print('\nFinished search! Best feature(s) is/are ', [i+1 for i in best[0]], ' with accuracy of ', round(best[1], 1), '%', sep='')
+    print('\nFinished search! Best feature(s) is/are ', [i+1 for i in best[0]], sep='', end=' ')
+    print('with accuracy of ', round(best[1], 1), '%', sep='')
 
 # prompts user for which search to run
 def selectAlgorithm():
