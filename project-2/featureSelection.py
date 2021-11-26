@@ -2,6 +2,51 @@ from anytree import Node # nodes used to create objects with custom attributes
 import copy as cp # deep copy used to make a copy of a value to avoid altering a reference
 import numpy as np # used for mathematical computations
 
+# performs backward elimination search
+def backwardElimination(data):
+    features = list(range(len(data[0].features))) # create list of features
+    chosen = [cp.deepcopy(features), -1] # initialize chosen features, 1st index holds features, 2nd holds accuracy
+    best = [[], -1] # initialize best features, 1st index holds features, 2nd holds accuracy
+    end_next_turn = -1 # used to determine when to break the while loop
+
+    # calculate and print accuracy of all features
+    print('\nRunning KNN with ALL features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+    # calculate and print accuracy of no features
+    print('Running KNN with NO features, we get an accuracy of ', round(accuracy(knnSearch(data, [])), 1), '%', sep='')
+
+    print('\nBeginning search...\n')
+    while len(features) > 0:
+        accuracies = {} # use dictionary to link accuracies to specific features
+        for feature in features:
+            chosen[0].remove(feature) # eliminate feature to test
+            result = knnSearch(data, chosen[0]) # get knn classification
+            accuracies[feature] = accuracy(result) # calculate and store accuracy
+            # note that features printed are incremented by 1 due to nature of indices in an array
+            print('\tUsing feature(s) ', [i+1 for i in chosen[0]], ', accuracy is ', round(accuracies[feature], 1), '%', sep='')
+            chosen[0].append(feature) # add tested feature back
+            chosen[0].sort() # sort features back in order
+
+        if end_next_turn == 0:
+            break # if flag is set to end next turn, break from while loop
+
+        # if accuracy has decreased, send warning and toggle flag to end next turn
+        if max(accuracies.values()) < chosen[1]:
+            print('\nWARNING: Accuracy has decreased! Continuing search in case of local maxima...')
+            end_next_turn = 0
+
+        chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
+        chosen[0].remove(chosen_feature) # eliminate from chosen features
+        chosen[1] = max(accuracies.values()) # get max accuracy from current values
+        print('\nFeature(s) ', [i+1 for i in chosen[0]], ' was/were best with accuracy of ', round(max(accuracies.values()), 1), '%\n', sep='')
+        
+        # copy only the best set of features with highest/increasing accuracy
+        if chosen[1] > best[1]:
+            best = cp.deepcopy(chosen)
+
+        features.remove(chosen_feature) # remove current feature for future searches
+    
+    print('\nFinished search! Best feature(s) is/are ', [i+1 for i in best[0]], ' with accuracy of ', round(best[1], 1), '%', sep='')
+
 # performs forward selection search
 def forwardSelection(data):
     features = list(range(len(data[0].features))) # create list of features
@@ -10,18 +55,20 @@ def forwardSelection(data):
     end_next_turn = -1 # used to determine when to break the while loop
 
     # calculate and print accuracy of all features
-    print('\nRunning KNN with all features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+    print('\nRunning KNN with ALL features, we get an accuracy of ', round(accuracy(knnSearch(data, features)), 1), '%', sep='')
+    # calculate and print accuracy of no features
+    print('Running KNN with NO features, we get an accuracy of ', round(accuracy(knnSearch(data, [])), 1), '%', sep='')
 
     print('\nBeginning search...\n')
     while len(features) > 0:
         accuracies = {} # use dictionary to link accuracies to specific features
         for feature in features:
-            chosen[0].append(feature)
+            chosen[0].append(feature) # add feature to test
             result = knnSearch(data, chosen[0]) # get knn classification
             accuracies[feature] = accuracy(result) # calculate and store accuracy
             # note that features printed are incremented by 1 due to nature of indices in an array
             print('\tUsing feature(s) ', [i+1 for i in chosen[0]], ', accuracy is ', round(accuracies[feature], 1), '%', sep='')
-            chosen[0].pop()
+            chosen[0].pop() # remove tested feature
 
         if end_next_turn == 0:
             break # if flag is set to end next turn, break from while loop
@@ -147,5 +194,6 @@ def main():
         forwardSelection(nodes)
     else:
         print('\nRunning Backward Elimination...')
+        backwardElimination(nodes)
 
 main()
