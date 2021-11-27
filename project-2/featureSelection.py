@@ -7,7 +7,7 @@ def backwardElimination(data):
     features = list(range(len(data[0].features))) # create list of features
     chosen = [cp.deepcopy(features), -1] # initialize chosen features, 1st index holds features, 2nd holds accuracy
     best = [[], -1] # initialize best features, 1st index holds features, 2nd holds accuracy
-    end_next_turn = -1 # used to determine when to break the while loop
+    accuracy_decreased = False # used to determine when to break the while loop
 
     # calculate and print accuracy of all features
     print('\nRunning KNN with ALL features, we get an accuracy of', end= ' ')
@@ -29,13 +29,14 @@ def backwardElimination(data):
             chosen[0].append(feature) # add tested feature back
             chosen[0].sort() # sort features back in order
 
-        if end_next_turn == 0:
-            break # if flag is set to end next turn, break from while loop
+        # if accuracy decreased beforehand and has not improved from best feature, end search
+        if accuracy_decreased and max(accuracies.values()) < best[1]:
+            break
 
         # if accuracy has decreased, send warning and toggle flag to end next turn
         if max(accuracies.values()) < chosen[1]:
             print('\nWARNING: Accuracy has decreased! Continuing search in case of local maxima...')
-            end_next_turn = 0
+            accuracy_decreased = True
 
         chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
         chosen[0].remove(chosen_feature) # eliminate from chosen features
@@ -57,7 +58,7 @@ def forwardSelection(data):
     features = list(range(len(data[0].features))) # create list of features
     chosen = [[], -1] # initialize chosen features, 1st index holds features, 2nd holds accuracy
     best = [[], -1] # initialize best features, 1st index holds features, 2nd holds accuracy
-    end_next_turn = -1 # used to determine when to break the while loop
+    accuracy_decreased = False # used to determine when to break the while loop
 
     # calculate and print accuracy of all features
     print('\nRunning KNN with ALL features, we get an accuracy of', end= ' ')
@@ -78,13 +79,14 @@ def forwardSelection(data):
             print(', accuracy is ', round(accuracies[feature], 1), '%', sep='')
             chosen[0].pop() # remove tested feature
 
-        if end_next_turn == 0:
-            break # if flag is set to end next turn, break from while loop
+        # if accuracy decreased beforehand and has not improved from best feature, end search
+        if accuracy_decreased and max(accuracies.values()) < best[1]:
+            break 
 
         # if accuracy has decreased, send warning and toggle flag to end next turn
         if max(accuracies.values()) < chosen[1]:
             print('\nWARNING: Accuracy has decreased! Continuing search in case of local maxima...')
-            end_next_turn = 0
+            accuracy_decreased = True
 
         chosen_feature = max(accuracies, key=accuracies.get) # get key of feature with max accuracy
         chosen[0].append(chosen_feature) # add to chosen features
