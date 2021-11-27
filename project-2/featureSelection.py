@@ -124,9 +124,9 @@ def accuracy(data):
             correct = correct + 1
     return correct / len(data) * 100
 
-# performs a k nearest neighbor search algorithm, using a default k value of 5;
+# performs a k nearest neighbor search algorithm, using a default k value of 3;
 # note that faeturse are offset by -1 due to the nature of indices in an array
-def knnSearch(data, features, k = 5):
+def knnSearch(data, features, k = 3):
     nodes = cp.deepcopy(data)
     for x in range(len(nodes)):
         # make an array of features to compare from test node
