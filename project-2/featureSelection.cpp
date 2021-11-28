@@ -100,10 +100,11 @@ double get_distance(Node n1, Node n2, std::vector<unsigned> f_indices) {
 std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_indices, unsigned k) {
     std::vector<Node> nodes = data; // makes a copy of the original data to return at the end
     for (unsigned i = 0; i < nodes.size(); i++) {
-        // copies original set of nodes and remove current test node so only neighbors are considered
-        // referenced https://stackoverflow.com/questions/19807783/how-to-copy-a-vector-except-one-specific-element
-        std::vector<Node> neighbors = nodes;
-        neighbors.erase(std::find(neighbors.begin(), neighbors.end(), nodes.at(i)));
+        // copies original set of nodes except current test node so only neighbors are considered
+        std::vector<Node> neighbors;
+        for (unsigned j = 0; j < nodes.size(); j++) {
+            if (i != j) { neighbors.push_back(nodes.at(j)); }
+        }
 
         // calculates Euclidean distances between test node and its neighbors
         for (unsigned j = 0; j < neighbors.size(); j++) {
@@ -115,7 +116,7 @@ std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_ind
         neighbors.resize(k);
 
         // counts neighboring classes and classify test node by the majority class
-        unsigned c1_cnt, c2_cnt = 0;
+        unsigned c1_cnt = 0, c2_cnt = 0;
         for (unsigned j = 0; j < neighbors.size(); j++) {
             if (neighbors.at(j).classification == 1) { c1_cnt++; }
             else { c2_cnt++; }
@@ -184,7 +185,7 @@ void forward_selection(std::vector<Node> data) {
     std::cout.precision(1); // sets to one decimal place
     std::cout << std::fixed; // fixes following number outputs within this function to follow set precision
 
-    // shows lresults from running k-Nearest Neighbor using all/no features
+    // shows results from running k-Nearest Neighbor using all/no features
     std::cout << "\tRunning KNN with ALL features, we get an accuracy of ";
     std::cout << accuracy(knn_search(data, features)) << "%\n";
     std::cout << "\tRunning KNN with NO features, we get an accuracy of ";
@@ -233,6 +234,7 @@ void forward_selection(std::vector<Node> data) {
         if (chosenSubset.second > bestSubset.second) { bestSubset = chosenSubset; }
 
         // removes chosen feature from features to be tested in future/remaining searches
+        // referenced https://stackoverflow.com/questions/19807783/how-to-copy-a-vector-except-one-specific-element
         features.erase(std::find(features.begin(), features.end(), maxAccuracy->first));
     }
     // outputs best results in the end
@@ -243,5 +245,78 @@ void forward_selection(std::vector<Node> data) {
 
 // performs Backward Elimination on given set of data points, starting with all features
 void backward_elimination(std::vector<Node> data) {
+    // creates a vector filled with possible features by index
+    std::vector<unsigned> features;
+    for (unsigned i = 0; i < data.at(0).features.size(); i++) { features.push_back(i); }
+    // initializes subsets to store current subset being tested and the best subset so far
+    std::pair<std::vector<unsigned>, double> chosenSubset;
+    chosenSubset.first = features;
+    chosenSubset.second = -1;
+    std::pair<std::vector<unsigned>, double> bestSubset;
+    bestSubset.first = {};
+    bestSubset.second = -1;
+    bool accuracyDecreased = false; // used to determine when to end the search
 
+    std::cout.precision(1); // sets to one decimal place
+    std::cout << std::fixed; // fixes following number outputs within this function to follow set precision
+
+    // shows results from running k-Nearest Neighbor using all/no features
+    std::cout << "\tRunning KNN with ALL features, we get an accuracy of ";
+    std::cout << accuracy(knn_search(data, features)) << "%\n";
+    std::cout << "\tRunning KNN with NO features, we get an accuracy of ";
+    std::cout << accuracy(knn_search(data, {})) << "%\n\n";
+
+    std::cout << "Beginning search...\n\n";
+    while (features.size() > 0) {
+        // vector used to store subsets of features with their corresponding accuracy
+        std::vector<std::pair<unsigned, double>> accuracies;
+        for (unsigned i = 0; i < features.size(); i++) {
+            // eliminates feature to test
+            chosenSubset.first.erase(std::find(chosenSubset.first.begin(), chosenSubset.first.end(), features.at(i)));
+            // performs k-Nearest Neighbor to classify dataset by current feature subset
+            std::vector<Node> result = knn_search(data, chosenSubset.first);
+            // calculates accuracy and adds to list of existing accuracies to compare later
+            accuracies.push_back(std::make_pair(features.at(i), accuracy(result)));
+
+            // prints resulting accuracy from tested feature subset
+            std::cout << "\tUsing feature(s) ";
+            print_subset(chosenSubset.first);
+            std::cout << ", accuracy is " << accuracy(knn_search(data, chosenSubset.first)) << "%\n";
+            chosenSubset.first.push_back(features.at(i)); // re-add tested feature
+            std::sort(chosenSubset.first.begin(), chosenSubset.first.end()); // sorts features back in order
+        }
+
+        // gets pair with the highest accuracy
+        // referenced stack overflow [https://stackoverflow.com/questions/56745759/how-to-find-max-value-of-second-element-of-stdpair-in-stdvector]
+        auto maxAccuracy = std::max_element(accuracies.begin(), accuracies.end(), [](std::pair<unsigned, double> &x, std::pair<unsigned, double> &y){ return x.second < y.second; });
+
+        // ends search when accuracy has decreased previously and accuracy seems to not improve
+        if (accuracyDecreased && maxAccuracy->second < bestSubset.second) { break; }
+
+        // if recently calculated best accuracy is less than the previous best,
+        // toggles flag that accuracy has decreased and warns the user
+        if (maxAccuracy->second < chosenSubset.second) {
+            std::cout << "\nWARNING: Accuracy has decreased! Continuing search in case of local maxima...\n";
+            accuracyDecreased = true;
+        }
+
+        // eliminates best feature to remove
+        chosenSubset.first.erase(std::find(chosenSubset.first.begin(), chosenSubset.first.end(), maxAccuracy->first));
+        chosenSubset.second = maxAccuracy->second; // updates accuracy
+        // outputs to the user the result of current search
+        std::cout << "\nFeature subset ";
+        print_subset(chosenSubset.first);
+        std::cout << " is the best with accuracy of " << maxAccuracy->second << "%\n\n";
+
+        // if current subset is better than previously logged best subset, update the best subset
+        if (chosenSubset.second > bestSubset.second) { bestSubset = chosenSubset; }
+
+        // removes chosen feature from features to be tested in future/remaining searches
+        // referenced https://stackoverflow.com/questions/19807783/how-to-copy-a-vector-except-one-specific-element
+        features.erase(std::find(features.begin(), features.end(), maxAccuracy->first));
+    }
+    // outputs best results in the end
+    std::cout << "\nFinished search! Best feature subset is ";
+    print_subset(bestSubset.first);
+    std::cout << " with accuracy of " << bestSubset.second << "%\n";
 }
