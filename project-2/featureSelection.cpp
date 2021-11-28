@@ -3,12 +3,13 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include<math.h>
+#include <math.h>
 #include <algorithm>
 
 struct Node {
     unsigned classification;
     std::vector<double> features;
+    double distance = -1;
     unsigned knn_classification;
 };
 
@@ -30,9 +31,9 @@ int main() {
     std::cout << "\nThis dataset has " << nodes.at(0).features.size() << " features ";
     std::cout << "with " << nodes.size() << " instances.\n\n";
 
-    unsigned algorithm = select_algorithm();
-    if (algorithm == 1) { std::cout << "\nRunning Forward Selection...\n"; }
-    else { std::cout << "\nRunning Backward Elimination...\n"; }
+    // unsigned algorithm = select_algorithm();
+    // if (algorithm == 1) { std::cout << "\nRunning Forward Selection...\n"; }
+    // else { std::cout << "\nRunning Backward Elimination...\n"; }
 
     return 0;
 }
@@ -79,10 +80,30 @@ double get_distance(Node n1, Node n2, std::vector<unsigned> f_indices) {
     return result;
 }
 
-std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_indices, unsigned k = 3) {
-    std::vector<Node> nodes;
+std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_indices, unsigned k) {
+    std::vector<Node> nodes = data;
     for (unsigned i = 0; i < nodes.size(); i++) {
+        std::vector<Node> neighbors;
+        for (unsigned j = 0; j < nodes.size(); j++) {
+            if (i != j) { neighbors.push_back(nodes.at(j)); }
+        }
 
+        for (unsigned j = 0; j < neighbors.size(); j++) {
+            neighbors.at(j).distance = get_distance(nodes.at(i), neighbors.at(j), f_indices);
+        }
+
+        std::sort(neighbors.begin(), neighbors.end(), [](Node &x, Node &y){ return x.distance < y.distance; });
+        neighbors.resize(k);
+
+        unsigned c1_cnt = 0;
+        unsigned c2_cnt = 0;
+        for (unsigned j = 0; j < neighbors.size(); j++) {
+            if (neighbors.at(j).classification == 1) { c1_cnt++; }
+            else { c2_cnt++; }
+        }
+
+        if (c1_cnt > c2_cnt) { nodes.at(i).knn_classification = 1; }
+        else { nodes.at(i).knn_classification = 2; }
     }
     return nodes;
 }
