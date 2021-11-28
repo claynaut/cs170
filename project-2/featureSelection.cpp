@@ -3,15 +3,18 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include<math.h>
+#include <algorithm>
 
 struct Node {
     unsigned classification;
-    std::vector<unsigned> features;
+    std::vector<double> features;
     unsigned knn_classification;
 };
 
 std::vector<Node> get_nodes(std::string filename);
-std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> features, unsigned k);
+double get_distance(Node n1, Node n2, std::vector<unsigned> f_indices);
+std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_indices, unsigned k);
 double accuracy(std::vector<Node> data);
 unsigned select_algorithm();
 void forward_selection();
@@ -24,7 +27,7 @@ int main() {
     std::cin >> filename;
 
     std::vector<Node> nodes = get_nodes(filename);
-    std::cout << "\nThis dataset has " << nodes[0].features.size() << " features ";
+    std::cout << "\nThis dataset has " << nodes.at(0).features.size() << " features ";
     std::cout << "with " << nodes.size() << " instances.\n\n";
 
     unsigned algorithm = select_algorithm();
@@ -49,9 +52,7 @@ std::vector<Node> get_nodes(std::string filename) {
                     node.classification = std::stoi(data);
                     isClass = false;
                 }
-                else {
-                    node.features.push_back(std::stod(data));
-                }
+                else { node.features.push_back(std::stod(data)); }
             }
             nodes.push_back(node);
         }
@@ -59,15 +60,37 @@ std::vector<Node> get_nodes(std::string filename) {
     return nodes;
 }
 
-std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> features, unsigned k = 3) {
+double get_distance(Node n1, Node n2, std::vector<unsigned> f_indices) {
+    std::vector<double> f1;
+    std::vector<double> f2;
+    for (unsigned i = 0; i < f_indices.size(); i++) {
+        f1.push_back(n1.features.at(f_indices.at(i)));
+        f2.push_back(n2.features.at(f_indices.at(i)));
+    }
+
+    std::vector<double> differences;
+    double sum = 0;
+    for (unsigned i = 0; i < f1.size(); i++) {
+        differences.push_back(f1.at(i) - f2.at(i));
+        sum += pow(differences.at(i), 2);
+    }
+    
+    double result = sqrt(sum);
+    return result;
+}
+
+std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_indices, unsigned k = 3) {
     std::vector<Node> nodes;
+    for (unsigned i = 0; i < nodes.size(); i++) {
+
+    }
     return nodes;
 }
 
 double accuracy(std::vector<Node> data) {
     unsigned correct = 0;
     for (unsigned i = 0; i < data.size(); i++) {
-        if (data[i].classification == data[i].knn_classification) { correct++; }
+        if (data.at(i).classification == data.at(i).knn_classification) { correct++; }
     }
     double result = correct / (double)data.size() * 100;
     return result;
