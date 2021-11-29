@@ -21,6 +21,7 @@ std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_ind
 double accuracy(std::vector<Node> data);
 unsigned select_algorithm();
 void print_subset(std::vector<unsigned> f_indices);
+double standard_deviation(std::vector<std::pair<unsigned, double>> accuracies);
 void forward_selection(std::vector<Node> data);
 void backward_elimination(std::vector<Node> data);
 
@@ -130,11 +131,12 @@ std::vector<Node> knn_search(std::vector<Node> data, std::vector<unsigned> f_ind
 // calculates accuracy of predicted classifications by k-Nearest Neighbor
 double accuracy(std::vector<Node> data) {
     unsigned correct = 0;
+    double result = 0.0;
     // counts how many nodes were correctly classified by comparing actual/predicted class attributes
     for (unsigned i = 0; i < data.size(); i++) {
         if (data.at(i).classification == data.at(i).knn_classification) { correct++; }
     }
-    double result = correct / (double)data.size() * 100; // calculates percentage
+    result = correct / (double)data.size() * 100; // calculates percentage
     return result; // returns percentage
 }
 
@@ -164,8 +166,8 @@ void print_subset(std::vector<unsigned> f_indices) {
         std::cout << f_indices.at(i)+1; // indices are incremented by 1 due to indices starting from 0
         // only prints commas if last index has not been reached yet
         if (i != f_indices.size()-1) { std::cout << ", "; }
-        else { std::cout << "}"; }
     }
+    std::cout << "}";
 }
 
 // performs Forward Selection on given set of data points, starting with no features
@@ -174,12 +176,13 @@ void forward_selection(std::vector<Node> data) {
     std::vector<unsigned> features;
     for (unsigned i = 0; i < data.at(0).features.size(); i++) { features.push_back(i); }
     // initializes subsets to store current subset being tested and the best subset so far
+    // note that the start state is a subset with no features
     std::pair<std::vector<unsigned>, double> chosenSubset;
     chosenSubset.first = {};
-    chosenSubset.second = -1;
+    chosenSubset.second = accuracy(knn_search(data, {}));
     std::pair<std::vector<unsigned>, double> bestSubset;
     bestSubset.first = {};
-    bestSubset.second = -1;
+    bestSubset.second = accuracy(knn_search(data, {}));
     bool accuracyDecreased = false; // used to determine when to end the search
 
     std::cout.precision(1); // sets to one decimal place
@@ -249,12 +252,13 @@ void backward_elimination(std::vector<Node> data) {
     std::vector<unsigned> features;
     for (unsigned i = 0; i < data.at(0).features.size(); i++) { features.push_back(i); }
     // initializes subsets to store current subset being tested and the best subset so far
+    // note that the start state is a set of all features
     std::pair<std::vector<unsigned>, double> chosenSubset;
     chosenSubset.first = features;
-    chosenSubset.second = -1;
+    chosenSubset.second = accuracy(knn_search(data, features));
     std::pair<std::vector<unsigned>, double> bestSubset;
     bestSubset.first = {};
-    bestSubset.second = -1;
+    bestSubset.second = accuracy(knn_search(data, features));
     bool accuracyDecreased = false; // used to determine when to end the search
 
     std::cout.precision(1); // sets to one decimal place
@@ -282,6 +286,8 @@ void backward_elimination(std::vector<Node> data) {
             std::cout << "\tUsing feature(s) ";
             print_subset(chosenSubset.first);
             std::cout << ", accuracy is " << accuracy(knn_search(data, chosenSubset.first)) << "%\n";
+            // also prints which feature was specifically removed to easily keep track of
+            std::cout << "\t└─ Eliminated feature " << features.at(i)+1 << "\n"; 
             chosenSubset.first.push_back(features.at(i)); // re-add tested feature
             std::sort(chosenSubset.first.begin(), chosenSubset.first.end()); // sorts features back in order
         }
@@ -291,6 +297,8 @@ void backward_elimination(std::vector<Node> data) {
         auto maxAccuracy = std::max_element(accuracies.begin(), accuracies.end(), [](std::pair<unsigned, double> &x, std::pair<unsigned, double> &y){ return x.second < y.second; });
 
         // ends search when accuracy has decreased previously and accuracy seems to not improve
+        // also modified to only end when the standard deviation is a more significant amount
+        // as the difference of accuracies for a large dataset using Backward Elimination is rather small
         if (accuracyDecreased && maxAccuracy->second < bestSubset.second) { break; }
 
         // if recently calculated best accuracy is less than the previous best,
@@ -306,7 +314,9 @@ void backward_elimination(std::vector<Node> data) {
         // outputs to the user the result of current search
         std::cout << "\nFeature subset ";
         print_subset(chosenSubset.first);
-        std::cout << " is the best with accuracy of " << maxAccuracy->second << "%\n\n";
+        std::cout << " is the best with accuracy of " << maxAccuracy->second << "%\n";
+        // also prints which feature was specifically removed to easily keep track of
+        std::cout << "└─ Eliminated feature " << maxAccuracy->first+1 << "\n\n";
 
         // if current subset is better than previously logged best subset, update the best subset
         if (chosenSubset.second > bestSubset.second) { bestSubset = chosenSubset; }
