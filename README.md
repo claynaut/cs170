@@ -40,7 +40,7 @@ Originally, the code was written in Python as seen in the file `featureSelection
 
 The following commands can be used to run the source code (as long as all necessary packages have been installed):
 - C++
-    - `g++ -o featureSelection -O3 featureSelection.cpp`
+    - `g++ -o featureSelection -O3 featureSelection.cpp && ./featureSelection`
     - Note that an optimization flag is used for faster performance
 - Python
     - `python3 featureSelection.py`
