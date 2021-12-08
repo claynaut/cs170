@@ -38,12 +38,23 @@ The main code used to perform feature selection is `featureSelection.cpp` which 
 
 Originally, the code was written in Python as seen in the file `featureSelection.py` but I switched to C++ due to its faster performance compared to Python. However, both source codes work as expected, just at different speeds.
 
-The following commands can be used to run the source code (as long as all necessary packages have been installed):
+The following commands can be used to run the original source code (as long as all necessary packages have been installed):
 - C++
     - `g++ -o featureSelection -O3 featureSelection.cpp && ./featureSelection`
     - Note that an optimization flag is used for faster performance
 - Python
     - `python3 featureSelection.py`
+
+Note that the original source code only works for the provided datasets by the instructor.
+
+The C++ code was later expanded as `extraCredit.cpp` to run the datasets provided by UCI as an extra credit opportunity. Only the search Forward Selection is used. The features have also been normalized.
+
+The following command can thne be used to run the source code for the extra credit:
+- C++
+    - `g++ -o extra -O3 extra.cpp && ./extra`
+    - Note that an optimization flag is used for faster performance
+    - Note that this only works with the dataset chosen, which is called `EC.txt`
+
 ### Sources Consulted
 - Project 2 specificatons provided by Dr. Keogh
 - [K Nearest Neighbor Article](https://towardsdatascience.com/k-nearest-neighbours-introduction-to-machine-learning-algorithms-18e7ce3d802a)
